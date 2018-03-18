@@ -1,7 +1,5 @@
 #!/bin/bash
-
-read -p "Please write your IP to set the master `echo $'\n> '`" MESSAGE
-
+read -p "Please write your IP to set the master ?`echo $'\n> '`" MESSAGE
 
 if [[ -z "$MESSAGE" ]]; then
 
@@ -14,18 +12,21 @@ if [[ -z "$MESSAGE" ]]; then
 
 else
 
-	sudo echo '$MESSAGE' master >> /etc/hosts
-	sudo echo master > $HADOOP_HOME/etc/hadoop/masters
-	sudo ssh-keygen -t -y rsa
+	sudo echo "$MESSAGE master" > /etc/hosts
+	sudo echo "master" > $HADOOP_HOME/etc/masters
+	sudo ssh-keygen -t rsa
 	sudo ssh-copy-id master
 	
 fi
 
+# stoping firewall services
+
+sudo systemctl stop firewalld.service
+sudo systemctl disable firewalld.service
+
 # installing java
-
-
-sudo yum install jre
-sudo yum install java-1.8.0-openjdk-devel
+sudo yum install -y jre
+sudo yum install -y java-1.8.0-openjdk-devel
 
 
 echo -e "################################\n"
@@ -40,31 +41,27 @@ echo -e "\n################################"
 
 #export JAVA HOME variable
 export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
+sudo source /etc/profile
 
-wget http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz
+wget "http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz"
 wget https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz.mds
 
 
-# installung perl-digest-sha
-sudo yum install perl-Digest-SHA
-
-
-## showing SHA(hash) 256 from hadoop.mds
+sudo yum install -y perl-Digest-SHA
 cat hadoop-2.7.4.tar.gz.mds | grep 256
-
-
-# creating hash for hadoop tar.gz
-shasum -a 256 hadoop-2.7.4.tar.gz
 
 # decompress the hadoop tar.gz in the /opt direction
 
-sudo tar -zxvf hadoop-2.7.4.tar.gz -C /opt
+sudo tar -zxvf hadoop-2.7.5.tar.gz -C /opt
+
+# creating hash for hadoop tar.gz
+shasum -a 256 hadoop-2.7.5.tar.gz
 
 #change paths
 
 echo "export PATH=/opt/hadoop-2.7.4/bin:$PATH" | sudo tee -a /etc/profile
-source /etc/profile
 
+source /etc/profile
 ### testing if hadoop is working
 
 echo -e "################################\n"
@@ -79,12 +76,12 @@ echo -e "\n################################"
 
 
 mkdir ~/source
-cp /opt/hadoop-2.7.4/etc/hadoop/*.xml ~/source
+cp /opt/hadoop-2.7.5/etc/hadoop/*.xml ~/source
 
 
 #### setting more variables
 
-cd /opt/hadoop-2.7.4/etc/hadoop/hadoop-env.sh
+cd /opt/hadoop-2.7.5/etc/hadoop/hadoop-env.sh
 
 sed -i "/export JAVA_HOME=/c\export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk"  hadoop-env.sh
 
@@ -99,7 +96,7 @@ export HADOOP_OPTS="$HADOOP_OPTS -Djava.library.path=$HADOOP_HOME/lib/native"
 
 #switching to $HADOOP_HOME/etc/hadoop directory
 
-cd /opt/hadoop-2.7.4/etc/hadoop
+cd /opt/hadoop-2.7.5/etc/hadoop
 
 mv mapred-site.xml.template mapred-site.xml
 
@@ -117,7 +114,7 @@ sed -i '/<configuration>/a <property> <name>yarn.resourcemanager.hostname</name>
 
 #change directories, make directories and make them executable by hadoop user
 
-cd /opt/hadoop-2.7.4
+cd /opt/hadoop-2.7.5
 
 
 sudo mkdir yarn
@@ -134,9 +131,9 @@ sudo mkdir yarn/log
 
 
 read -p "Do you want to start dfs and yarn ?(y/n)" MESSAGE
-if ["$MESSAGE" = "y"]; then
+if [ $MESSAGE = "y" ]; then
 
-# Started #
+echo "# Started #"
 
 sh sbin/start-dfs.sh
 sh sbin/start-yarn.sh
@@ -148,16 +145,13 @@ exit 1
 
 fi
 
-
-
 read -p "Do you want to start a hadoop-mapreduces example which is a wordcounter to try if it works ?(y/n)" MESSAGE
-if ["$MESSAGE" = "y"]; then
+if [ "$MESSAGE" = "y" ]; then
 
 hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.4.jar  wordcount input output
 
 else
 
 echo "######## Hadoop is ready for your needs now! #######"
-exit 1
 
 fi
