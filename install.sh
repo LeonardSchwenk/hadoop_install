@@ -41,10 +41,11 @@ echo -e "\n################################"
 
 #export JAVA HOME variable
 export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
-sudo source /etc/profile
+export HADOOP_PREFIX=/etc/hadoop-2.7.5/
+source /etc/profile
 
 wget "http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz"
-wget https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz.mds
+wget "https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz.mds"
 
 
 sudo yum install -y perl-Digest-SHA
@@ -59,9 +60,11 @@ shasum -a 256 hadoop-2.7.5.tar.gz
 
 #change paths
 
-echo "export PATH=/opt/hadoop-2.7.4/bin:$PATH" | sudo tee -a /etc/profile
+echo "export PATH=/opt/hadoop-2.7.5/bin:$PATH" | sudo tee -a /etc/profile
 
 source /etc/profile
+
+sed -i "/export JAVA_HOME=/c\export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk"  /opt/hadoop-2.7.5/etc/hadoop/hadoop-env.sh
 
 ### testing if hadoop is working
 
@@ -81,10 +84,6 @@ cp /opt/hadoop-2.7.5/etc/hadoop/*.xml ~/source
 
 
 #### setting more variables
-
-cd /opt/hadoop-2.7.5/etc/hadoop/
-
-sed -i "/export JAVA_HOME=/c\export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk"  hadoop-env.sh
 
 export HADOOP_HDFS_HOME=$HADOOP_HOME
 export YARN_HOME=$HADOOP_HOME
@@ -115,7 +114,7 @@ sed -i '/<configuration>/a <property> <name>yarn.resourcemanager.hostname</name>
 
 #change directories, make directories and make them executable by hadoop user
 
-cd /opt/hadoop-2.7.5
+cd /opt/hadoop-2.7.5/
 
 
 sudo mkdir yarn
@@ -130,29 +129,4 @@ sudo mkdir yarn/local
 
 sudo mkdir yarn/log
 
-
-read -p "Do you want to start dfs and yarn ?(y/n)" MESSAGE
-if [ $MESSAGE = "y" ]; then
-
-echo "# Started #"
-
-sh sbin/start-dfs.sh
-sh sbin/start-yarn.sh
-
-else
-
-echo "######## Hadoop is ready for your needs now! #######"
-exit 1
-
-fi
-
-read -p "Do you want to start a hadoop-mapreduces example which is a wordcounter to try if it works ?(y/n)" MESSAGE
-if [ "$MESSAGE" = "y" ]; then
-
-hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.4.jar  wordcount input output
-
-else
-
-echo "######## Hadoop is ready for your needs now! #######"
-
-fi
+echo "Installation finished"
