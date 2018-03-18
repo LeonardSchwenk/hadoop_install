@@ -13,7 +13,7 @@ if [[ -z "$MESSAGE" ]]; then
 else
 
 	sudo echo "$MESSAGE master" > /etc/hosts
-	sudo echo "master" > $HADOOP_HOME/etc/masters
+	sudo hostnamectl set-hostname master
 	sudo ssh-keygen -t rsa
 	sudo ssh-copy-id master
 	
@@ -44,11 +44,11 @@ export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
 sudo source /etc/profile
 
 wget "http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz"
-wget https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz.mds
+wget https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz.mds
 
 
 sudo yum install -y perl-Digest-SHA
-cat hadoop-2.7.4.tar.gz.mds | grep 256
+cat hadoop-2.7.5.tar.gz.mds | grep 256
 
 # decompress the hadoop tar.gz in the /opt direction
 
@@ -62,6 +62,7 @@ shasum -a 256 hadoop-2.7.5.tar.gz
 echo "export PATH=/opt/hadoop-2.7.4/bin:$PATH" | sudo tee -a /etc/profile
 
 source /etc/profile
+
 ### testing if hadoop is working
 
 echo -e "################################\n"
@@ -81,7 +82,7 @@ cp /opt/hadoop-2.7.5/etc/hadoop/*.xml ~/source
 
 #### setting more variables
 
-cd /opt/hadoop-2.7.5/etc/hadoop/hadoop-env.sh
+cd /opt/hadoop-2.7.5/etc/hadoop/
 
 sed -i "/export JAVA_HOME=/c\export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk"  hadoop-env.sh
 
