@@ -3,20 +3,20 @@ read -p "Please write your IP to set the master ?`echo $'\n> '`" MESSAGE
 
 if [[ -z "$MESSAGE" ]]; then
 
-	echo "################################"
-	echo "Something went wrong, please make sure that you wrote you're IP adress."
-	echo "Execute the script again."
-	echo "################################"
+        echo "################################"
+        echo "Something went wrong, please make sure that you wrote you're IP adress."
+        echo "Execute the script again."
+        echo "################################"
 
-	exit 1
+        exit 1
 
 else
 
-	sudo echo "$MESSAGE master" > /etc/hosts
-	sudo hostnamectl set-hostname master
-	sudo ssh-keygen -t rsa
-	sudo ssh-copy-id master
-	
+        sudo echo "$MESSAGE master" > /etc/hosts
+        sudo hostnamectl set-hostname master
+        sudo ssh-keygen -t rsa
+        sudo ssh-copy-id master
+
 fi
 
 # stoping firewall services
@@ -41,7 +41,6 @@ echo -e "\n################################"
 
 #export JAVA HOME variable
 export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
-export HADOOP_PREFIX=/etc/hadoop-2.7.5/
 source /etc/profile
 
 wget "http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.5/hadoop-2.7.5.tar.gz"
@@ -64,20 +63,10 @@ echo "export PATH=/opt/hadoop-2.7.5/bin:$PATH" | sudo tee -a /etc/profile
 
 source /etc/profile
 
+#add JAVA_HOME variable in hadoop-env.sh
 sed -i "/export JAVA_HOME=/c\export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk"  /opt/hadoop-2.7.5/etc/hadoop/hadoop-env.sh
 
-### testing if hadoop is working
-
-echo -e "################################\n"
-
-echo "#### HADOOP ####"
-
-hadoop
-
-echo -e "\n################################"
-
 # copie all xml data into source
-
 
 mkdir ~/source
 cp /opt/hadoop-2.7.5/etc/hadoop/*.xml ~/source
@@ -85,16 +74,20 @@ cp /opt/hadoop-2.7.5/etc/hadoop/*.xml ~/source
 
 #### setting more variables
 
+export HADOOP_HOME=/opt/hadoop-2.7.5
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
 export HADOOP_HDFS_HOME=$HADOOP_HOME
 export YARN_HOME=$HADOOP_HOME
 export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
 
-
 export HADOOP_OPTS="$HADOOP_OPTS -Djava.library.path=$HADOOP_HOME/lib/native"
 
-
 #switching to $HADOOP_HOME/etc/hadoop directory
+
+#add configurations in xml files
 
 cd /opt/hadoop-2.7.5/etc/hadoop
 
@@ -128,5 +121,15 @@ sudo mkdir dfs/datanode
 sudo mkdir yarn/local
 
 sudo mkdir yarn/log
+
+### testing if hadoop is working
+
+echo -e "################################\n"
+
+echo "#### HADOOP ####"
+
+hadoop
+
+echo -e "\n################################"
 
 echo "Installation finished"
